@@ -265,6 +265,8 @@
     </div>
   </div>
 
+  <div id="budget-alerts"></div>
+
   <div class="card">
     <div class="card-title">カテゴリ別（今月）</div>
     <div id="legend" class="legend"></div>
@@ -337,6 +339,14 @@
     <button class="tab-btn" onclick="setHistoryTab('week',this)">今週</button>
     <button class="tab-btn" onclick="setHistoryTab('month',this)">今月</button>
   </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;">
+    <input type="text" id="history-search" class="form-input" placeholder="🔍 店名・メモで検索"
+      oninput="historySearch=this.value;renderHistory()" style="flex:1;font-size:13px;padding:9px 12px;">
+    <select id="history-cat-filter" class="form-select"
+      onchange="historyCategoryFilter=this.value;renderHistory()" style="width:120px;font-size:12px;padding:9px 8px;">
+      <option value="">すべて</option>
+    </select>
+  </div>
   <div id="history-list"></div>
 </div>
 
@@ -367,6 +377,16 @@
           <input type="color" id="under-color-input" onchange="saveCompareColor('under',this.value)">
         </div>
       </div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">月次予算</div>
+    <div class="card" style="padding:16px;">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6;">
+        カテゴリごとに月の予算上限を設定できます。超過すると履歴で警告が表示されます。
+      </p>
+      <div id="budget-list"></div>
     </div>
   </div>
 
@@ -475,7 +495,10 @@ function save(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
 let categories = load('kakeibo_cats') || JSON.parse(JSON.stringify(DEFAULT_CATS));
 let expenses   = load('kakeibo_expenses') || [];
 let settings   = load('kakeibo_settings') || { overColor:'#ff4757', underColor:'#2ed573' };
+let budgets    = load('kakeibo_budgets') || {};
 let historyTab = 'all';
+let historySearch = '';
+let historyCategoryFilter = '';
 let editingId  = null;
 let reviewItems = [];
 const pieInst  = {};
@@ -569,6 +592,44 @@ function renderDashboard(){
         <div class="legend-dot" style="background:${c.color}"></div>
         <span>${esc(c.name)}&nbsp;${fmtY(c.total)}</span>
       </div>`).join('');
+  }
+
+  // Budget alerts
+  const alertEl=document.getElementById('budget-alerts');
+  if(alertEl){
+    const budgetKeys=Object.keys(budgets);
+    if(budgetKeys.length>0){
+      const rows=budgetKeys.map(cid=>{
+        const cat=getCat(cid);
+        const spent=mExp.filter(e=>e.category===cid).reduce((s,e)=>s+e.amount,0);
+        const limit=budgets[cid];
+        if(spent>=limit){
+          return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span>🔴</span>
+            <span style="flex:1;font-size:13px;font-weight:600;">${esc(cat.name)} 予算超過</span>
+            <span style="font-size:12px;color:#ff4757;font-weight:700;">${fmtY(spent)} / ${fmtY(limit)}</span>
+          </div>`;
+        } else if(spent>=limit*0.8){
+          const remain=limit-spent;
+          return `<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+            <span>🟡</span>
+            <span style="flex:1;font-size:13px;font-weight:600;">${esc(cat.name)} 予算まであと</span>
+            <span style="font-size:12px;color:#f39c12;font-weight:700;">${fmtY(remain)}</span>
+          </div>`;
+        }
+        return '';
+      }).filter(r=>r);
+      if(rows.length>0){
+        alertEl.innerHTML=`<div class="card" style="padding:14px 18px;margin-bottom:14px;">
+          <div class="card-title">予算アラート</div>
+          ${rows.join('')}
+        </div>`;
+      } else {
+        alertEl.innerHTML='';
+      }
+    } else {
+      alertEl.innerHTML='';
+    }
   }
 
   // Recent
@@ -694,16 +755,34 @@ function setHistoryTab(tab, btn){
   historyTab=tab;
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  const si=document.getElementById('history-search');
+  if(si) historySearch=si.value;
+  const ci=document.getElementById('history-cat-filter');
+  if(ci) historyCategoryFilter=ci.value;
   renderHistory();
 }
 
 function renderHistory(){
+  // Populate category filter dropdown
+  const cf=document.getElementById('history-cat-filter');
+  if(cf){
+    const curVal=cf.value;
+    cf.innerHTML='<option value="">すべて</option>'+
+      categories.map(c=>`<option value="${c.id}" ${c.id===curVal?'selected':''}>${esc(c.name)}</option>`).join('');
+    if(historyCategoryFilter) cf.value=historyCategoryFilter;
+  }
+
   const td=today();
   const wsow=startOfWeek(td), wend=addDays(wsow,6);
   const msow=startOfMonth(td), mend=addDays(addMonths(msow,1),-1);
   let list=[...expenses].sort((a,b)=>b.date.localeCompare(a.date)||(b.createdAt-a.createdAt));
   if(historyTab==='week')  list=list.filter(e=>e.date>=wsow && e.date<=wend);
   if(historyTab==='month') list=list.filter(e=>e.date>=msow && e.date<=mend);
+  if(historySearch){
+    const q=historySearch.toLowerCase();
+    list=list.filter(e=>(e.shop||'').toLowerCase().includes(q)||(e.memo||'').toLowerCase().includes(q));
+  }
+  if(historyCategoryFilter) list=list.filter(e=>e.category===historyCategoryFilter);
 
   const hl=document.getElementById('history-list');
   if(list.length===0){
@@ -781,6 +860,7 @@ function deleteEditingExpense(){
 // SETTINGS
 // ═══════════════════════════════════════════
 function renderSettings(){
+  renderBudgetList();
   document.getElementById('cat-list').innerHTML=categories.map((c,i)=>`
     <div class="category-row">
       <label class="cat-color-btn" style="background:${c.color}" title="色を変更">
@@ -828,6 +908,37 @@ function saveCompareColor(type, val){
   settings[type+'Color']=val; save('kakeibo_settings',settings);
   document.getElementById(type+'-color-label').textContent=val;
   showToast('✅ 色を保存しました');
+}
+
+// ═══════════════════════════════════════════
+// BUDGET
+// ═══════════════════════════════════════════
+function saveBudget(catId, val){
+  if(val>0) budgets[catId]=val;
+  else delete budgets[catId];
+  save('kakeibo_budgets', budgets);
+}
+
+function renderBudgetList(){
+  const td=today();
+  const msow=startOfMonth(td), mend=addDays(addMonths(msow,1),-1);
+  const mExp=expenses.filter(e=>e.date>=msow && e.date<=mend);
+  const bl=document.getElementById('budget-list');
+  if(!bl) return;
+  bl.innerHTML=categories.map(c=>{
+    const spent=mExp.filter(e=>e.category===c.id).reduce((s,e)=>s+e.amount,0);
+    const bval=budgets[c.id]||'';
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);">
+      <div style="width:10px;height:10px;border-radius:50%;background:${c.color};flex-shrink:0;"></div>
+      <span style="flex:1;font-size:14px;">${esc(c.name)}</span>
+      <span style="font-size:11px;color:var(--text2);white-space:nowrap;">今月: ${fmtY(spent)}</span>
+      <div class="input-prefix" style="width:110px;">
+        <input type="number" class="form-input" value="${bval}" placeholder="上限なし"
+          min="0" inputmode="numeric" style="font-size:13px;padding:7px 10px 7px 22px;"
+          onchange="saveBudget('${c.id}', parseInt(this.value)||0)">
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════
