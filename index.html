@@ -355,6 +355,21 @@
   <div class="header"><h1>⚙️ 設定</h1></div>
 
   <div class="settings-section">
+    <div class="settings-section-title">Gmail同期設定</div>
+    <div class="card" style="padding:16px;">
+      <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6;">
+        同期対象のGmailアドレスを管理します。登録したアドレス宛ての購入メールを同期します。
+      </p>
+      <div id="sync-addr-list"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <input type="email" id="new-sync-addr" class="form-input" placeholder="メールアドレスを追加"
+          style="flex:1;font-size:13px;padding:9px 12px;" onkeydown="if(event.key==='Enter')addSyncAddr()">
+        <button class="btn btn-secondary btn-sm" onclick="addSyncAddr()">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="settings-section">
     <div class="settings-section-title">カテゴリ管理</div>
     <div id="cat-list"></div>
     <button class="btn btn-secondary btn-sm" onclick="addCategory()" style="margin-top:8px;">＋ カテゴリを追加</button>
@@ -497,6 +512,7 @@ let expenses   = load('kakeibo_expenses') || [];
 let settings   = load('kakeibo_settings') || { overColor:'#ff4757', underColor:'#2ed573' };
 let budgets    = load('kakeibo_budgets') || {};
 let historyTab = 'all';
+let syncAddrs = load('kakeibo_sync_addrs') || ['risaaaa830@gmail.com'];
 let historySearch = '';
 let historyCategoryFilter = '';
 let editingId  = null;
@@ -859,7 +875,39 @@ function deleteEditingExpense(){
 // ═══════════════════════════════════════════
 // SETTINGS
 // ═══════════════════════════════════════════
+function renderSyncAddrList(){
+  const el = document.getElementById('sync-addr-list');
+  if(!el) return;
+  el.innerHTML = syncAddrs.length === 0
+    ? `<p style="font-size:12px;color:var(--text3);">アドレスが登録されていません</p>`
+    : syncAddrs.map((addr,i) => `
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:13px;flex:1;">📧 ${esc(addr)}</span>
+        <button onclick="removeSyncAddr(${i})" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;">×</button>
+      </div>`).join('');
+}
+
+function addSyncAddr(){
+  const input = document.getElementById('new-sync-addr');
+  const val = input.value.trim();
+  if(!val || !val.includes('@')){ showToast('⚠️ 正しいメールアドレスを入力してください'); return; }
+  if(syncAddrs.includes(val)){ showToast('⚠️ すでに登録されています'); return; }
+  syncAddrs.push(val);
+  save('kakeibo_sync_addrs', syncAddrs);
+  input.value = '';
+  renderSyncAddrList();
+  showToast('✅ 追加しました');
+}
+
+function removeSyncAddr(idx){
+  syncAddrs.splice(idx, 1);
+  save('kakeibo_sync_addrs', syncAddrs);
+  renderSyncAddrList();
+  showToast('🗑️ 削除しました');
+}
+
 function renderSettings(){
+  renderSyncAddrList();
   renderBudgetList();
   document.getElementById('cat-list').innerHTML=categories.map((c,i)=>`
     <div class="category-row">
