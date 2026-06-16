@@ -833,29 +833,67 @@ function doImport(ev){
 // GMAIL REVIEW
 // ═══════════════════════════════════════════
 function showGmailInfo(){
-  // Simulates Gmail MCP extraction (real sync runs via Claude Code session)
-  reviewItems=makeDemoGmailItems();
+  // Real Gmail data extracted via Claude Code MCP session (2026-06-16)
+  reviewItems=makeRealGmailItems();
   renderReviewScreen();
   showScreen('review');
 }
 
-function makeDemoGmailItems(){
-  const td=today();
+// Check if an item is a duplicate of existing expenses OR of another item in the batch
+function isDuplicate(item, batchItems, batchIdx){
+  // Check against already-saved expenses
+  const inDb = expenses.some(e =>
+    e.shop === item.shop && e.amount === item.amount && e.date === item.date
+  );
+  if(inDb) return true;
+  // Check for same shop+amount within the current import batch (earlier entries)
+  const inBatch = batchItems.slice(0, batchIdx).some(e =>
+    e.shop === item.shop && e.amount === item.amount
+  );
+  return inBatch;
+}
+
+function makeRealGmailItems(){
   return [
-    { id:uid(), amount:3240, shop:'Amazon.co.jp', date:addDays(td,-2), category:'c2', memo:'注文番号 #123-456', confirmed:true,
-      snippet:'【Amazon】ご注文の確認　合計金額：¥3,240　日用品 他2点をご注文いただきました。' },
-    { id:uid(), amount:1580, shop:'スターバックス 渋谷店', date:addDays(td,-3), category:'c1', memo:'', confirmed:true,
-      snippet:'スターバックス　お会計のご明細　合計 ¥1,580　ラテ、サンドイッチ' },
-    { id:uid(), amount:980, shop:'Netflix Japan', date:addDays(td,-5), category:'c4', memo:'スタンダードプラン', confirmed:true,
-      snippet:'Netflixからのお知らせ　月額料金 ￥980 のお支払いが完了しました。' },
-    { id:uid(), amount:2100, shop:'ユニクロ オンライン', date:addDays(td,-7), category:'c3', memo:'Tシャツ×2', confirmed:true,
-      snippet:'ユニクロ オンラインストア　ご注文確認　商品合計 1,800円円　送料 300円　合計 ¥2,100' },
+    {
+      id: uid(), amount: 5290, shop: 'ZARA', date: '2026-06-16', category: 'c3', confirmed: true,
+      memo: '注文番号 54331304961 スリットネック ポプリントップス',
+      snippet: '【ZARA】ご購入ありがとうございます　合計 ￥5,290（税込）　スリットネック ポプリントップス ×1'
+    },
+    {
+      id: uid(), amount: 5290, shop: 'ZARA', date: '2026-06-16', category: 'c3', confirmed: false,
+      memo: '注文番号 54331304961（発送通知）',
+      snippet: '【ZARA】ご注文は発送されました　注文番号 54331304961　お届け予定：6月17日水曜日'
+    },
+    {
+      id: uid(), amount: 1000, shop: 'studioplus-p', date: '2026-06-12', category: 'c4', confirmed: true,
+      memo: '1000ポイント購入 注文番号：14901',
+      snippet: 'studioplus-p 商品購入完了　合計金額：1000円（税込）　支払方法：クレジット決済'
+    },
+    {
+      id: uid(), amount: 2636, shop: 'マツキヨ コカラオンライン', date: '2026-06-03', category: 'c2', confirmed: true,
+      memo: '注文番号 1002856039　天然水ケース×2、シャボン玉スノール×2',
+      snippet: '【マツキヨ ココカラ】ご注文完了　注文合計金額：￥2,636　支払金額：￥2,073（563ポイント使用）'
+    },
+    {
+      id: uid(), amount: 0, shop: '楽天市場 Nacre Beaute', date: '2026-06-16', category: 'c5', confirmed: false,
+      memo: '注文確認中（金額未確定）',
+      snippet: '【楽天市場】注文内容ご確認　Nacre Beauteより自動配信メール。ショップ確認後に金額が確定します。'
+    },
+    {
+      id: uid(), amount: 0, shop: '楽天市場 BeStyle', date: '2026-06-16', category: 'c3', confirmed: false,
+      memo: '注文確認中（金額未確定）',
+      snippet: '【楽天市場】注文内容ご確認　BeStyleより自動配信メール。ショップ確認後に金額が確定します。'
+    },
   ];
 }
 
 function renderReviewScreen(){
-  document.getElementById('review-list').innerHTML=reviewItems.map((item,idx)=>`
-    <div class="review-item">
+  document.getElementById('review-list').innerHTML=reviewItems.map((item,idx)=>{
+    const dup = isDuplicate(item, reviewItems, idx);
+    return `
+    <div class="review-item" style="${dup?'border:1.5px solid #f39c12;':''}" >
+      ${dup?`<div style="font-size:13px;font-weight:700;color:#f39c12;margin-bottom:8px;display:flex;align-items:center;gap:6px;">⚠️ 重複の可能性があります<span style="font-size:11px;font-weight:400;color:var(--text2);">同じ店舗・金額がすでに存在します</span></div>`:''}
       <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.6;background:var(--bg3);padding:8px 10px;border-radius:6px;">
         📩 ${esc(item.snippet)}</div>
       <div class="form-group" style="margin-bottom:8px;">
@@ -891,7 +929,8 @@ function renderReviewScreen(){
           style="width:16px;height:16px;accent-color:var(--accent);cursor:pointer;">
         保存する
       </label>
-    </div>`).join('');
+    </div>`;
+  }).join('');
   document.getElementById('review-actions').style.display='block';
 }
 
