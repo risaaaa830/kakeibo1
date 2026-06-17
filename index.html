@@ -1125,6 +1125,7 @@ function saveReviewedItems(){
   if(!toSave.length){ showToast('⚠️ 保存する項目を選択してください'); return; }
   toSave.forEach(({snippet,confirmed,...e})=>{ expenses.push({...e,createdAt:Date.now()}); });
   save('kakeibo_expenses',expenses);
+  save('kakeibo_last_sync', Date.now());
   showToast(`✅ ${toSave.length}件を保存しました`);
   showScreen('dashboard');
 }
@@ -1172,6 +1173,30 @@ if('serviceWorker' in navigator){
 // ── INIT ──
 initAddForm();
 renderDashboard();
+
+// 週次同期リマインダー
+(function checkSyncReminder(){
+  const last = load('kakeibo_last_sync');
+  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
+  if(!last || (Date.now() - last) >= SEVEN_DAYS){
+    setTimeout(()=>{
+      const banner = document.createElement('div');
+      banner.id = 'sync-reminder';
+      banner.style.cssText = `
+        position:fixed;top:0;left:50%;transform:translateX(-50%);
+        width:100%;max-width:480px;background:#5a6e5a;color:#fff;
+        padding:14px 16px;z-index:400;display:flex;align-items:center;
+        gap:10px;font-size:13px;box-shadow:0 2px 12px rgba(0,0,0,0.15);
+      `;
+      banner.innerHTML = `
+        <span style="font-size:20px;">📧</span>
+        <span style="flex:1;line-height:1.5;">${last ? 'Gmailの同期から7日以上経過しています。<br>「追加」タブから同期しましょう！' : 'まだGmailを同期していません。<br>「追加」タブから同期しましょう！'}</span>
+        <button onclick="document.getElementById('sync-reminder').remove()" style="background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1;">×</button>
+      `;
+      document.body.appendChild(banner);
+    }, 800);
+  }
+})();
 </script>
 </body>
 </html>
