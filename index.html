@@ -366,6 +366,17 @@
           style="flex:1;font-size:13px;padding:9px 12px;" onkeydown="if(event.key==='Enter')addSyncAddr()">
         <button class="btn btn-secondary btn-sm" onclick="addSyncAddr()">追加</button>
       </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+        <div class="form-label" style="margin-bottom:8px;">🔔 同期リマインダーの間隔</div>
+        <select id="sync-interval-select" class="form-select" onchange="saveSyncInterval(this.value)" style="font-size:13px;padding:9px 12px;">
+          <option value="3">3日ごと</option>
+          <option value="7">7日ごと</option>
+          <option value="14">14日ごと</option>
+          <option value="30">30日ごと</option>
+          <option value="0">通知しない</option>
+        </select>
+        <p id="last-sync-label" style="font-size:11px;color:var(--text3);margin-top:8px;"></p>
+      </div>
     </div>
   </div>
 
@@ -512,7 +523,8 @@ let expenses   = load('kakeibo_expenses') || [];
 let settings   = load('kakeibo_settings') || { overColor:'#ff4757', underColor:'#2ed573' };
 let budgets    = load('kakeibo_budgets') || {};
 let historyTab = 'all';
-let syncAddrs = load('kakeibo_sync_addrs') || ['risaaaa830@gmail.com'];
+let syncAddrs    = load('kakeibo_sync_addrs')    || ['risaaaa830@gmail.com'];
+let syncInterval = load('kakeibo_sync_interval') ?? 7;
 let historySearch = '';
 let historyCategoryFilter = '';
 let editingId  = null;
@@ -885,6 +897,21 @@ function renderSyncAddrList(){
         <span style="font-size:13px;flex:1;">📧 ${esc(addr)}</span>
         <button onclick="removeSyncAddr(${i})" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;">×</button>
       </div>`).join('');
+  // ドロップダウンの初期値
+  const sel = document.getElementById('sync-interval-select');
+  if(sel) sel.value = String(syncInterval);
+  // 最終同期日表示
+  const last = load('kakeibo_last_sync');
+  const lbl = document.getElementById('last-sync-label');
+  if(lbl) lbl.textContent = last
+    ? `最終同期: ${fmtDateFull(new Date(last).toISOString().slice(0,10))}`
+    : '未同期';
+}
+
+function saveSyncInterval(val){
+  syncInterval = parseInt(val);
+  save('kakeibo_sync_interval', syncInterval);
+  showToast('✅ リマインダー間隔を変更しました');
 }
 
 function addSyncAddr(){
@@ -1174,11 +1201,12 @@ if('serviceWorker' in navigator){
 initAddForm();
 renderDashboard();
 
-// 週次同期リマインダー
+// 同期リマインダー
 (function checkSyncReminder(){
+  if(syncInterval === 0) return;
   const last = load('kakeibo_last_sync');
-  const SEVEN_DAYS = 7 * 24 * 60 * 60 * 1000;
-  if(!last || (Date.now() - last) >= SEVEN_DAYS){
+  const INTERVAL = syncInterval * 24 * 60 * 60 * 1000;
+  if(!last || (Date.now() - last) >= INTERVAL){
     setTimeout(()=>{
       const banner = document.createElement('div');
       banner.id = 'sync-reminder';
