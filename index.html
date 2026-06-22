@@ -108,6 +108,24 @@
   .compare-diff { font-size: 12px; margin-top: 5px; font-weight: 600; }
   .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
   .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--text2); }
+  .cal-weekdays { display:grid; grid-template-columns:repeat(7,1fr); margin-bottom:4px; }
+  .cal-weekday { text-align:center; font-size:11px; color:var(--text3); padding:4px 0; font-weight:600; }
+  .cal-weekday.sun { color:#e74c3c; }
+  .cal-weekday.sat { color:#2980b9; }
+  .cal-grid-inner { display:grid; grid-template-columns:repeat(7,1fr); gap:2px; }
+  .cal-cell {
+    min-height:56px; border-radius:8px; padding:4px;
+    display:flex; flex-direction:column; align-items:center;
+    cursor:pointer; transition:background 0.15s;
+  }
+  .cal-cell:hover { background:var(--bg3); }
+  .cal-cell.today .cal-day { background:var(--accent); color:#fff; border-radius:50%; width:22px;height:22px;display:flex;align-items:center;justify-content:center; }
+  .cal-cell.other-month { opacity:0.3; }
+  .cal-cell.selected { background:var(--bg3); outline:2px solid var(--accent); }
+  .cal-day { font-size:12px; font-weight:600; color:var(--text); line-height:22px; }
+  .cal-day.sun-text { color:#e74c3c; }
+  .cal-day.sat-text { color:#2980b9; }
+  .cal-amount { font-size:10px; color:#2c2c2a; font-weight:600; margin-top:2px; line-height:1.2; text-align:center; }
   .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
   .expense-item {
     display: flex; align-items: center; gap: 12px;
@@ -452,6 +470,19 @@
   </div>
 </div>
 
+<!-- ── CALENDAR ── -->
+<div id="screen-calendar" class="screen">
+  <div class="header">
+    <button onclick="calPrevMonth()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text);padding:4px 8px;">‹</button>
+    <h1 id="cal-title" style="font-size:18px;font-weight:700;"></h1>
+    <button onclick="calNextMonth()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text);padding:4px 8px;">›</button>
+  </div>
+  <div class="card" style="padding:12px 8px;">
+    <div id="cal-grid"></div>
+  </div>
+  <div id="cal-day-detail" style="margin-top:12px;"></div>
+</div>
+
 <!-- NAV -->
 <nav id="nav">
   <button class="nav-btn active" onclick="showScreen('dashboard')" data-screen="dashboard">
@@ -462,6 +493,9 @@
   </button>
   <button class="nav-btn" onclick="showScreen('history')" data-screen="history">
     <span class="icon">📋</span><span>履歴</span>
+  </button>
+  <button class="nav-btn" onclick="showScreen('calendar')" data-screen="calendar">
+    <span class="icon">📅</span><span>カレンダー</span>
   </button>
   <button class="nav-btn" onclick="showScreen('settings')" data-screen="settings">
     <span class="icon">⚙️</span><span>設定</span>
@@ -571,6 +605,7 @@ function showScreen(name){
   if(name==='history')   renderHistory();
   if(name==='settings')  renderSettings();
   if(name==='add')       initAddForm();
+  if(name==='calendar')  renderCalendar();
 }
 
 // ═══════════════════════════════════════════
@@ -1205,6 +1240,109 @@ function loadDemoData(){
 // ═══════════════════════════════════════════
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').catch(()=>{});
+}
+
+// ═══════════════════════════════════════════
+// CALENDAR
+// ═══════════════════════════════════════════
+let calYear  = new Date().getFullYear();
+let calMonth = new Date().getMonth(); // 0-indexed
+let calSelectedDay = null;
+
+function calPrevMonth(){
+  calMonth--;
+  if(calMonth < 0){ calMonth=11; calYear--; }
+  renderCalendar();
+}
+function calNextMonth(){
+  calMonth++;
+  if(calMonth > 11){ calMonth=0; calYear++; }
+  renderCalendar();
+}
+
+function renderCalendar(){
+  const td = today();
+  document.getElementById('cal-title').textContent =
+    `${calYear}年 ${calMonth+1}月`;
+
+  // Build daily totals map: { "2026-06-03": 2636, ... }
+  const dayMap = {};
+  expenses.forEach(e => {
+    if(!dayMap[e.date]) dayMap[e.date] = 0;
+    dayMap[e.date] += e.amount;
+  });
+
+  // First day of month (0=Sun...6=Sat), convert to Mon-start (0=Mon...6=Sun)
+  const firstDate = new Date(calYear, calMonth, 1);
+  let startDow = firstDate.getDay(); // 0=Sun
+  startDow = (startDow + 6) % 7;    // Mon=0, Tue=1, ... Sun=6
+
+  const daysInMonth = new Date(calYear, calMonth+1, 0).getDate();
+  const daysInPrev  = new Date(calYear, calMonth, 0).getDate();
+
+  const weekdays = ['月','火','水','木','金','土','日'];
+
+  let html = '<div class="cal-weekdays">';
+  weekdays.forEach((d,i) => {
+    const cls = i===5 ? 'sat' : i===6 ? 'sun' : '';
+    html += `<div class="cal-weekday ${cls}">${d}</div>`;
+  });
+  html += '</div><div class="cal-grid-inner">';
+
+  // Prev month padding
+  for(let i=0; i<startDow; i++){
+    const d = daysInPrev - startDow + 1 + i;
+    html += `<div class="cal-cell other-month"><span class="cal-day">${d}</span></div>`;
+  }
+
+  // Current month
+  for(let d=1; d<=daysInMonth; d++){
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = (new Date(calYear, calMonth, d).getDay() + 6) % 7; // Mon=0
+    const isToday   = dateStr === td;
+    const isSel     = dateStr === calSelectedDay;
+    const total     = dayMap[dateStr];
+    const dayColorCls = dow===5 ? 'sat-text' : dow===6 ? 'sun-text' : '';
+    html += `<div class="cal-cell${isToday?' today':''}${isSel?' selected':''}" onclick="selectCalDay('${dateStr}')">
+      <span class="cal-day ${dayColorCls}">${d}</span>
+      ${total ? `<span class="cal-amount">${total>=10000?(total/10000).toFixed(1)+'万':fmtY(total).replace('¥','')}</span>` : ''}
+    </div>`;
+  }
+
+  // Next month padding
+  const cells = startDow + daysInMonth;
+  const remainder = cells % 7 === 0 ? 0 : 7 - (cells % 7);
+  for(let i=1; i<=remainder; i++){
+    html += `<div class="cal-cell other-month"><span class="cal-day">${i}</span></div>`;
+  }
+
+  html += '</div>';
+  document.getElementById('cal-grid').innerHTML = html;
+  renderCalDayDetail();
+}
+
+function selectCalDay(dateStr){
+  calSelectedDay = calSelectedDay === dateStr ? null : dateStr;
+  renderCalendar();
+}
+
+function renderCalDayDetail(){
+  const el = document.getElementById('cal-day-detail');
+  if(!calSelectedDay){ el.innerHTML=''; return; }
+  const list = expenses.filter(e=>e.date===calSelectedDay)
+    .sort((a,b)=>b.createdAt-a.createdAt);
+  if(!list.length){
+    el.innerHTML=`<div class="card" style="padding:14px;text-align:center;color:var(--text3);font-size:13px;">${fmtDateFull(calSelectedDay)} の支出はありません</div>`;
+    return;
+  }
+  const sum = list.reduce((s,e)=>s+e.amount,0);
+  el.innerHTML=`<div class="card" style="padding:14px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <span style="font-size:13px;font-weight:700;">${fmtDateFull(calSelectedDay)}</span>
+      <span style="font-size:15px;font-weight:700;">${fmtY(sum)}</span>
+    </div>
+    ${list.map(e=>expRow(e)).join('')}
+  </div>`;
 }
 
 // ── INIT ──
