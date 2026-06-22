@@ -478,6 +478,7 @@
     <button onclick="calNextMonth()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text);padding:4px 8px;">›</button>
   </div>
   <div class="card" style="padding:12px 8px;">
+    <div id="cal-month-total" style="text-align:center;padding:8px 0 4px;font-size:20px;font-weight:700;color:var(--text);"></div>
     <div id="cal-grid"></div>
   </div>
   <div id="cal-day-detail" style="margin-top:12px;"></div>
@@ -1264,6 +1265,11 @@ function renderCalendar(){
   const td = today();
   document.getElementById('cal-title').textContent =
     `${calYear}年 ${calMonth+1}月`;
+
+  // Month total
+  const monthPrefix = `${calYear}-${String(calMonth+1).padStart(2,'0')}`;
+  const monthTotal = expenses.filter(e=>e.date.startsWith(monthPrefix)).reduce((s,e)=>s+e.amount,0);
+  document.getElementById('cal-month-total').textContent = `今月合計 ${fmtY(monthTotal)}`;
 
   // Build daily totals map: { "2026-06-03": 2636, ... }
   const dayMap = {};
