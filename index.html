@@ -1067,14 +1067,29 @@ function isDuplicate(item, batchItems, batchIdx){
 function makeRealGmailItems(){
   return [
     {
+      id: uid(), amount: 1980, shop: 'Rakuten Fashion', date: '2026-06-18', category: 'c2', confirmed: true,
+      memo: 'クリアタンブラー クロミ 注文番号 279405-20260618-0168235148',
+      snippet: '【Rakuten Fashion】ご注文内容の確認　クリアタンブラー クロミ ￥1,980 × 1個'
+    },
+    {
+      id: uid(), amount: 1000, shop: 'studioplus-p', date: '2026-06-19', category: 'c4', confirmed: true,
+      memo: '1000ポイント購入 注文番号：15093',
+      snippet: 'studioplus-p 商品購入完了　合計金額：1000円（税込）　支払方法：クレジット決済'
+    },
+    {
       id: uid(), amount: 5290, shop: 'ZARA', date: '2026-06-16', category: 'c3', confirmed: true,
       memo: '注文番号 54331304961 スリットネック ポプリントップス',
       snippet: '【ZARA】ご購入ありがとうございます　合計 ￥5,290（税込）　スリットネック ポプリントップス ×1'
     },
     {
-      id: uid(), amount: 5290, shop: 'ZARA', date: '2026-06-16', category: 'c3', confirmed: false,
-      memo: '注文番号 54331304961（発送通知）',
-      snippet: '【ZARA】ご注文は発送されました　注文番号 54331304961　お届け予定：6月17日水曜日'
+      id: uid(), amount: 1390, shop: '楽天市場 BeStyle', date: '2026-06-17', category: 'c3', confirmed: true,
+      memo: '楽天市場 BeStyle',
+      snippet: '楽天市場【BeStyle】ご注文ありがとうございます。　合計 1,390円'
+    },
+    {
+      id: uid(), amount: 1180, shop: '楽天市場 Nacre Beaute', date: '2026-06-16', category: 'c5', confirmed: true,
+      memo: 'NacreBeaute',
+      snippet: '【NacreBeaute】ご注文ありがとうございます　合計 1,180円'
     },
     {
       id: uid(), amount: 1000, shop: 'studioplus-p', date: '2026-06-12', category: 'c4', confirmed: true,
@@ -1082,19 +1097,14 @@ function makeRealGmailItems(){
       snippet: 'studioplus-p 商品購入完了　合計金額：1000円（税込）　支払方法：クレジット決済'
     },
     {
-      id: uid(), amount: 2636, shop: 'マツキヨ コカラオンライン', date: '2026-06-03', category: 'c2', confirmed: true,
+      id: uid(), amount: 2636, shop: 'マツキヨ ココカラオンライン', date: '2026-06-03', category: 'c2', confirmed: true,
       memo: '注文番号 1002856039　天然水ケース×2、シャボン玉スノール×2',
       snippet: '【マツキヨ ココカラ】ご注文完了　注文合計金額：￥2,636　支払金額：￥2,073（563ポイント使用）'
     },
     {
-      id: uid(), amount: 0, shop: '楽天市場 Nacre Beaute', date: '2026-06-16', category: 'c5', confirmed: false,
-      memo: '注文確認中（金額未確定）',
-      snippet: '【楽天市場】注文内容ご確認　Nacre Beauteより自動配信メール。ショップ確認後に金額が確定します。'
-    },
-    {
-      id: uid(), amount: 0, shop: '楽天市場 BeStyle', date: '2026-06-16', category: 'c3', confirmed: false,
-      memo: '注文確認中（金額未確定）',
-      snippet: '【楽天市場】注文内容ご確認　BeStyleより自動配信メール。ショップ確認後に金額が確定します。'
+      id: uid(), amount: 0, shop: 'au PAY（Apple Music）', date: '2026-06-07', category: 'c4', confirmed: false,
+      memo: 'Apple One サービス利用料（金額未確定）',
+      snippet: 'au PAY（auかんたん決済）ご利用内容のお知らせ　Apple Music サービス名：Apple One'
     },
   ];
 }
