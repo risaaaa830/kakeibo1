@@ -1102,49 +1102,53 @@ function isDuplicate(item, batchItems, batchIdx){
 
 function makeRealGmailItems(){
   return [
-    {
-      id: uid(), amount: 1980, shop: 'Rakuten Fashion', date: '2026-06-18', category: 'c2', confirmed: true,
-      memo: 'クリアタンブラー クロミ 注文番号 279405-20260618-0168235148',
-      snippet: '【Rakuten Fashion】ご注文内容の確認　クリアタンブラー クロミ ￥1,980 × 1個'
-    },
-    {
-      id: uid(), amount: 1000, shop: 'studioplus-p', date: '2026-06-19', category: 'c4', confirmed: true,
-      memo: '1000ポイント購入 注文番号：15093',
-      snippet: 'studioplus-p 商品購入完了　合計金額：1000円（税込）　支払方法：クレジット決済'
-    },
-    {
-      id: uid(), amount: 5290, shop: 'ZARA', date: '2026-06-16', category: 'c3', confirmed: true,
-      memo: '注文番号 54331304961 スリットネック ポプリントップス',
-      snippet: '【ZARA】ご購入ありがとうございます　合計 ￥5,290（税込）　スリットネック ポプリントップス ×1'
-    },
-    {
-      id: uid(), amount: 1390, shop: '楽天市場 BeStyle', date: '2026-06-17', category: 'c3', confirmed: true,
-      memo: '楽天市場 BeStyle',
-      snippet: '楽天市場【BeStyle】ご注文ありがとうございます。　合計 1,390円'
-    },
-    {
-      id: uid(), amount: 1180, shop: '楽天市場 Nacre Beaute', date: '2026-06-16', category: 'c5', confirmed: true,
-      memo: 'NacreBeaute',
-      snippet: '【NacreBeaute】ご注文ありがとうございます　合計 1,180円'
-    },
-    {
-      id: uid(), amount: 1000, shop: 'studioplus-p', date: '2026-06-12', category: 'c4', confirmed: true,
-      memo: '1000ポイント購入 注文番号：14901',
-      snippet: 'studioplus-p 商品購入完了　合計金額：1000円（税込）　支払方法：クレジット決済'
-    },
-    {
-      id: uid(), amount: 2636, shop: 'マツキヨ ココカラオンライン', date: '2026-06-03', category: 'c2', confirmed: true,
-      memo: '注文番号 1002856039　天然水ケース×2、シャボン玉スノール×2',
-      snippet: '【マツキヨ ココカラ】ご注文完了　注文合計金額：￥2,636　支払金額：￥2,073（563ポイント使用）'
-    },
-    {
-      id: uid(), amount: 0, shop: 'au PAY（Apple Music）', date: '2026-06-07', category: 'c4', confirmed: false,
-      memo: 'Apple One サービス利用料（金額未確定）',
-      snippet: 'au PAY（auかんたん決済）ご利用内容のお知らせ　Apple Music サービス名：Apple One'
-    },
+    // ── MUFGカード 利用明細 ──
+    { id:uid(), amount:4840,   shop:'スマートEX（JR東海）',              date:'2026-05-16', category:'c5', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:7580,   shop:'サッポロライオン',                   date:'2026-05-18', category:'c1', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:10000,  shop:'AP/スイカ（Suicaチャージ）',        date:'2026-05-18', category:'c6', confirmed:true,  memo:'Suicaチャージ', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:1060,   shop:'日本タクシー',                       date:'2026-05-18', category:'c5', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:1985,   shop:'PLUSTA 京都駅前',                   date:'2026-05-18', category:'c1', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:11110,  shop:'スマートEX（JR東海）',              date:'2026-05-18', category:'c5', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:2376,   shop:'ASTY 京都',                         date:'2026-05-18', category:'c1', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:290,    shop:'APPLE COM BILL',                    date:'2026-05-19', category:'c4', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:610,    shop:'まいばすけっと',                     date:'2026-05-19', category:'c1', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:2984,   shop:'ココカラファイン',                   date:'2026-05-19', category:'c2', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:1000,   shop:'ピラティスエアリアルヨガスタジオ',   date:'2026-05-20', category:'c6', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:20600,  shop:'ピラティスエアリアルヨガスタジオ',   date:'2026-05-20', category:'c6', confirmed:true,  memo:'月謝など', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:6210,   shop:'カプアンドデンキ',                  date:'2026-05-20', category:'c2', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:13000,  shop:'AP/APPLE COM BILL',                 date:'2026-05-20', category:'c4', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:6580,   shop:'ニューライン アイプラス',           date:'2026-05-21', category:'c3', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:9406,   shop:'セーラークリーニング月島店',        date:'2026-05-21', category:'c2', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:2602,   shop:'マツモトキヨシオンラインストア',     date:'2026-05-25', category:'c2', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:2135,   shop:'まいばすけっと',                     date:'2026-05-25', category:'c1', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:7578,   shop:'ネスレニッポン オンライン',         date:'2026-05-26', category:'c1', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:3902,   shop:'東京都水道局',                      date:'2026-05-26', category:'c2', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:1000,   shop:'ピラティスエアリアルヨガスタジオ',   date:'2026-05-26', category:'c6', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:1631,   shop:'フジマート月島店',                  date:'2026-05-26', category:'c1', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:1669,   shop:'Amazon.co.jp',                      date:'2026-05-27', category:'c2', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:11100,  shop:'スマートEX（JR東海）',              date:'2026-05-28', category:'c5', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:10000,  shop:'AP/スイカ（Suicaチャージ）',        date:'2026-05-29', category:'c6', confirmed:true,  memo:'Suicaチャージ', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:246600, shop:'APPLE.COM/JP',                      date:'2026-05-29', category:'c4', confirmed:false, memo:'高額：内容を確認してください', snippet:'MUFGカード利用明細 ¥246,600' },
+    { id:uid(), amount:1680,   shop:'ビックカメラ 有楽町店',            date:'2026-05-29', category:'c2', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:2200,   shop:'フェイラー銀座本店',               date:'2026-05-30', category:'c3', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:11400,  shop:'アップル ストア 銀座',             date:'2026-05-30', category:'c4', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:5980,   shop:'カブシキガイシャアルカド',          date:'2026-05-30', category:'c6', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:3080,   shop:'ビックカメラ 有楽町店',            date:'2026-05-30', category:'c2', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:2383,   shop:'なないろ生命保険',                  date:'2026-05-31', category:'c6', confirmed:true,  memo:'継続', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:550,    shop:'JAL WELLNESS',                      date:'2026-06-01', category:'c5', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:1500,   shop:'フジマート月島店',                  date:'2026-06-01', category:'c1', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    { id:uid(), amount:5090,   shop:'AP/APPLE COM BILL',                 date:'2026-06-01', category:'c4', confirmed:true,  memo:'', snippet:'MUFGカード利用明細' },
+    // ── Gmail 購入メール ──
+    { id:uid(), amount:1980,   shop:'Rakuten Fashion',                   date:'2026-06-18', category:'c3', confirmed:true,  memo:'クリアタンブラー クロミ', snippet:'【Rakuten Fashion】ご注文内容の確認' },
+    { id:uid(), amount:1000,   shop:'studioplus-p',                      date:'2026-06-19', category:'c4', confirmed:true,  memo:'1000ポイント購入 注文番号：15093', snippet:'studioplus-p 商品購入完了' },
+    { id:uid(), amount:5290,   shop:'ZARA',                              date:'2026-06-16', category:'c3', confirmed:true,  memo:'注文番号 54331304961 スリットネック ポプリントップス', snippet:'【ZARA】ご購入ありがとうございます' },
+    { id:uid(), amount:1390,   shop:'楽天市場 BeStyle',                  date:'2026-06-17', category:'c3', confirmed:true,  memo:'', snippet:'楽天市場【BeStyle】ご注文ありがとうございます' },
+    { id:uid(), amount:1180,   shop:'楽天市場 Nacre Beaute',             date:'2026-06-16', category:'c5', confirmed:true,  memo:'', snippet:'【NacreBeaute】ご注文ありがとうございます' },
+    { id:uid(), amount:1000,   shop:'studioplus-p',                      date:'2026-06-12', category:'c4', confirmed:true,  memo:'1000ポイント購入 注文番号：14901', snippet:'studioplus-p 商品購入完了' },
+    { id:uid(), amount:2636,   shop:'マツキヨ ココカラオンライン',       date:'2026-06-03', category:'c2', confirmed:true,  memo:'天然水ケース×2、シャボン玉スノール×2', snippet:'【マツキヨ ココカラ】ご注文完了' },
+    { id:uid(), amount:0,      shop:'au PAY（Apple Music）',             date:'2026-06-07', category:'c4', confirmed:false, memo:'Apple One サービス利用料（金額未確定）', snippet:'au PAY ご利用内容のお知らせ　Apple Music' },
   ];
 }
-
 function renderReviewScreen(){
   document.getElementById('review-list').innerHTML=reviewItems.map((item,idx)=>{
     const dup = isDuplicate(item, reviewItems, idx);
