@@ -385,6 +385,20 @@
         <button class="btn btn-secondary btn-sm" onclick="addSyncAddr()">追加</button>
       </div>
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+        <div class="form-label" style="margin-bottom:8px;">📅 同期するメールの期間</div>
+        <select id="sync-range-select" class="form-select" onchange="saveSyncRange(this.value)" style="font-size:13px;padding:9px 12px;">
+          <option value="7">過去7日間</option>
+          <option value="14">過去14日間</option>
+          <option value="30">過去30日間</option>
+          <option value="60">過去60日間</option>
+          <option value="90">過去90日間</option>
+          <option value="365">過去1年間</option>
+        </select>
+        <p style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5;">
+          この期間より古いメールはレビュー画面に表示されません。
+        </p>
+      </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
         <div class="form-label" style="margin-bottom:8px;">🔔 同期リマインダーの間隔</div>
         <select id="sync-interval-select" class="form-select" onchange="saveSyncInterval(this.value)" style="font-size:13px;padding:9px 12px;">
           <option value="3">3日ごと</option>
@@ -560,6 +574,7 @@ let budgets    = load('kakeibo_budgets') || {};
 let historyTab = 'all';
 let syncAddrs    = load('kakeibo_sync_addrs')    || ['risaaaa830@gmail.com'];
 let syncInterval = load('kakeibo_sync_interval') ?? 7;
+let syncRange    = load('kakeibo_sync_range')    ?? 30;
 let historySearch = '';
 let historyCategoryFilter = '';
 let editingId  = null;
@@ -936,12 +951,20 @@ function renderSyncAddrList(){
   // ドロップダウンの初期値
   const sel = document.getElementById('sync-interval-select');
   if(sel) sel.value = String(syncInterval);
+  const rsel = document.getElementById('sync-range-select');
+  if(rsel) rsel.value = String(syncRange);
   // 最終同期日表示
   const last = load('kakeibo_last_sync');
   const lbl = document.getElementById('last-sync-label');
   if(lbl) lbl.textContent = last
     ? `最終同期: ${fmtDateFull(new Date(last).toISOString().slice(0,10))}`
     : '未同期';
+}
+
+function saveSyncRange(val){
+  syncRange = parseInt(val);
+  save('kakeibo_sync_range', syncRange);
+  showToast('✅ 同期期間を変更しました');
 }
 
 function saveSyncInterval(val){
@@ -1080,10 +1103,22 @@ function doImport(ev){
 // GMAIL REVIEW
 // ═══════════════════════════════════════════
 function showGmailInfo(){
-  // Real Gmail data extracted via Claude Code MCP session (2026-06-16)
-  reviewItems=makeRealGmailItems();
+  // Real Gmail data extracted via Claude Code MCP session
+  const all = makeRealGmailItems();
+  // 同期期間でフィルター
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - syncRange);
+  const cutoffStr = cutoff.toISOString().slice(0,10);
+  reviewItems = all.filter(item => item.date >= cutoffStr);
+  // 日付の新しい順にソート
+  reviewItems.sort((a,b) => b.date.localeCompare(a.date));
   renderReviewScreen();
   showScreen('review');
+  if(reviewItems.length === 0){
+    showToast('⚠️ 設定した期間内に対象メールがありません');
+  } else {
+    showToast(`📧 ${reviewItems.length}件のメールを取得しました（過去${syncRange}日間）`);
+  }
 }
 
 // Check if an item is a duplicate of existing expenses OR of another item in the batch
