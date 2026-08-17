@@ -399,6 +399,18 @@
         </p>
       </div>
       <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
+        <div class="form-label" style="margin-bottom:8px;">🚫 除外キーワード</div>
+        <p style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.5;">
+          店名・メモにこの言葉を含むメールは同期時に自動で除外されます（例：Meta広告）。
+        </p>
+        <div id="exclude-kw-list"></div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+          <input type="text" id="new-exclude-kw" class="form-input" placeholder="除外する言葉を追加"
+            style="flex:1;font-size:13px;padding:9px 12px;" onkeydown="if(event.key==='Enter')addExcludeKw()">
+          <button class="btn btn-secondary btn-sm" onclick="addExcludeKw()">追加</button>
+        </div>
+      </div>
+      <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--border);">
         <div class="form-label" style="margin-bottom:8px;">🔔 同期リマインダーの間隔</div>
         <select id="sync-interval-select" class="form-select" onchange="saveSyncInterval(this.value)" style="font-size:13px;padding:9px 12px;">
           <option value="3">3日ごと</option>
@@ -573,8 +585,9 @@ let settings   = load('kakeibo_settings') || { overColor:'#ff4757', underColor:'
 let budgets    = load('kakeibo_budgets') || {};
 let historyTab = 'all';
 let syncAddrs    = load('kakeibo_sync_addrs')    || ['risaaaa830@gmail.com'];
-let syncInterval = load('kakeibo_sync_interval') ?? 7;
-let syncRange    = load('kakeibo_sync_range')    ?? 30;
+let syncInterval    = load('kakeibo_sync_interval')  ?? 7;
+let syncRange       = load('kakeibo_sync_range')     ?? 30;
+let excludeKeywords = load('kakeibo_exclude_kw')     || ['Meta広告'];
 let historySearch = '';
 let historyCategoryFilter = '';
 let editingId  = null;
@@ -967,6 +980,37 @@ function saveSyncRange(val){
   showToast('✅ 同期期間を変更しました');
 }
 
+function renderExcludeKwList(){
+  const el = document.getElementById('exclude-kw-list');
+  if(!el) return;
+  el.innerHTML = excludeKeywords.length === 0
+    ? `<p style="font-size:12px;color:var(--text3);">除外キーワードはありません</p>`
+    : excludeKeywords.map((kw,i) => `
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border);">
+        <span style="font-size:13px;flex:1;">🚫 ${esc(kw)}</span>
+        <button onclick="removeExcludeKw(${i})" style="background:none;border:none;color:var(--text3);font-size:18px;cursor:pointer;line-height:1;">×</button>
+      </div>`).join('');
+}
+
+function addExcludeKw(){
+  const input = document.getElementById('new-exclude-kw');
+  const val = input.value.trim();
+  if(!val){ showToast('⚠️ キーワードを入力してください'); return; }
+  if(excludeKeywords.includes(val)){ showToast('⚠️ すでに登録されています'); return; }
+  excludeKeywords.push(val);
+  save('kakeibo_exclude_kw', excludeKeywords);
+  input.value = '';
+  renderExcludeKwList();
+  showToast('✅ 除外キーワードを追加しました');
+}
+
+function removeExcludeKw(idx){
+  excludeKeywords.splice(idx, 1);
+  save('kakeibo_exclude_kw', excludeKeywords);
+  renderExcludeKwList();
+  showToast('🗑️ 削除しました');
+}
+
 function saveSyncInterval(val){
   syncInterval = parseInt(val);
   save('kakeibo_sync_interval', syncInterval);
@@ -994,6 +1038,7 @@ function removeSyncAddr(idx){
 
 function renderSettings(){
   renderSyncAddrList();
+  renderExcludeKwList();
   renderBudgetList();
   document.getElementById('cat-list').innerHTML=categories.map((c,i)=>`
     <div class="category-row">
@@ -1109,7 +1154,16 @@ function showGmailInfo(){
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - syncRange);
   const cutoffStr = cutoff.toISOString().slice(0,10);
-  reviewItems = all.filter(item => item.date >= cutoffStr);
+  let filtered = all.filter(item => item.date >= cutoffStr);
+  // 除外キーワードでフィルター（店名・メモに含まれる場合は除外）
+  const excludedCount = filtered.length;
+  filtered = filtered.filter(item =>
+    !excludeKeywords.some(kw =>
+      (item.shop && item.shop.includes(kw)) || (item.memo && item.memo.includes(kw))
+    )
+  );
+  const removed = excludedCount - filtered.length;
+  reviewItems = filtered;
   // 日付の新しい順にソート
   reviewItems.sort((a,b) => b.date.localeCompare(a.date));
   renderReviewScreen();
@@ -1117,7 +1171,7 @@ function showGmailInfo(){
   if(reviewItems.length === 0){
     showToast('⚠️ 設定した期間内に対象メールがありません');
   } else {
-    showToast(`📧 ${reviewItems.length}件のメールを取得しました（過去${syncRange}日間）`);
+    showToast(`📧 ${reviewItems.length}件を取得${removed>0?`（${removed}件を除外）`:''}`);
   }
 }
 
